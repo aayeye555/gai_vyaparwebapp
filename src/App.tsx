@@ -941,7 +941,7 @@ Thank you! From ${activeBusiness.name}.`;
               onClick={handleLogin}
               className="bg-indigo-600 text-white font-semibold text-xs px-3 py-1.5 rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-1.5 shadow-xs"
             >
-              <UserCheck size={14} /> Admin Login
+              <UserCheck size={14} /> Sign In
             </button>
           )}
         </div>
@@ -3464,7 +3464,7 @@ Thank you! From ${activeBusiness.name}.`;
                 </button>
                 <div className="flex items-center gap-2 mb-1">
                   <Lock size={18} className="text-amber-300" />
-                  <h3 className="text-base font-black uppercase tracking-wide">Unified Admin Sign-In</h3>
+                  <h3 className="text-base font-black uppercase tracking-wide">Unified Secure Sign-In</h3>
                 </div>
                 <p className="text-[11px] text-indigo-100">
                   Manage GSTR-1 ledgers, catalog invoicing, and payment logs securely.
@@ -3716,7 +3716,7 @@ Thank you! From ${activeBusiness.name}.`;
                       className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-2.5 rounded-xl transition-colors shadow-xs uppercase tracking-wider font-mono flex items-center justify-center gap-1.5"
                     >
                       <Sparkles size={14} className="text-amber-400" />
-                      Login as Sandbox Admin (Bypass Mode)
+                      Login as Sandbox User (Bypass Mode)
                     </button>
                   </div>
                 )}
