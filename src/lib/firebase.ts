@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported } from "firebase/analytics";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -29,6 +30,13 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); /* CRITICAL: The app will break without this line */
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Initialize Analytics if supported
+isSupported().then((supported) => {
+  if (supported) {
+    getAnalytics(app);
+  }
+}).catch((err) => console.warn("Analytics initialization skipped:", err));
 
 // Standard test connection on load
 async function testConnection() {
