@@ -885,7 +885,9 @@ Thank you! From ${activeBusiness.name}.`;
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-mono">
             <Building2 size={14} className="text-slate-500" />
-            <span className="text-slate-700 font-semibold">{activeBusiness?.name}</span>
+            <span className="text-slate-700 font-semibold">
+              {activeBusiness?.name === "Gupta Electronics & Appliances" ? "My Business" : activeBusiness?.name}
+            </span>
           </div>
 
           {premiumPlan === "premium" ? (
