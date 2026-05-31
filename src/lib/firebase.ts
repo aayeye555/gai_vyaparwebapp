@@ -6,7 +6,9 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-  User
+  User,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 import {
   getFirestore,
@@ -260,6 +262,26 @@ export async function loginWithGoogle() {
     return res.user;
   } catch (err) {
     console.error("Google Signin Failed:", err);
+    throw err;
+  }
+}
+
+export async function loginWithEmail(email: string, pass: string) {
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, pass);
+    return res.user;
+  } catch (err) {
+    console.error("Email Signin Failed:", err);
+    throw err;
+  }
+}
+
+export async function registerWithEmail(email: string, pass: string) {
+  try {
+    const res = await createUserWithEmailAndPassword(auth, email, pass);
+    return res.user;
+  } catch (err) {
+    console.error("Email Registration Failed:", err);
     throw err;
   }
 }
