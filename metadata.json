@@ -1,0 +1,6 @@
+{
+  "name": "VyaparFlow",
+  "description": "Premium GST Billing, Indian SMB Invoice Generator, and AI-powered Accounting App with automated OCR receipt scanning, tax insights, and WhatsApp reminders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

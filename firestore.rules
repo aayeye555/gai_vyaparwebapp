@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PRIMITIVE HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerUid) {
+      return isSignedIn() && request.auth.uid == ownerUid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- ENTITY VALIDATIONS ---
+    
+    function isValidBusiness(data) {
+      return data.keys().hasAll(['id', 'ownerUid', 'name', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && (data.get('gstin', null) == null || (data.gstin is string && data.gstin.size() <= 15))
+        && (data.get('email', null) == null || (data.email is string && data.email.size() <= 100))
+        && (data.get('phone', null) == null || (data.phone is string && data.phone.size() <= 20))
+        && (data.get('upiId', null) == null || (data.upiId is string && data.upiId.size() <= 100));
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['id', 'businessId', 'ownerUid', 'name', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.businessId is string && data.businessId.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 250
+        && (data.get('gstin', null) == null || (data.gstin is string && data.gstin.size() <= 15))
+        && (data.get('phone', null) == null || (data.phone is string && data.phone.size() <= 25))
+        && (data.get('email', null) == null || (data.email is string && data.email.size() <= 100));
+    }
+
+    function isValidInvoice(data) {
+      return data.keys().hasAll(['id', 'invoiceNumber', 'businessId', 'ownerUid', 'customerId', 'type', 'date', 'totalAmount', 'status', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.invoiceNumber is string && data.invoiceNumber.size() <= 50
+        && data.businessId is string && data.businessId.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.customerId is string && data.customerId.size() <= 128
+        && data.type is string && data.type.size() <= 50
+        && data.date is string && data.date.size() <= 50
+        && data.totalAmount is number
+        && data.status is string && (data.status == 'Draft' || data.status == 'Unpaid' || data.status == 'Paid' || data.status == 'Partially Paid' || data.status == 'Overdue')
+        && (data.get('items', null) == null || data.items is list);
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['id', 'businessId', 'ownerUid', 'name', 'unitPrice', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.businessId is string && data.businessId.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 250
+        && data.unitPrice is number;
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['id', 'businessId', 'ownerUid', 'date', 'description', 'category', 'amount', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.businessId is string && data.businessId.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.date is string && data.date.size() <= 50
+        && data.description is string && data.description.size() <= 500
+        && data.category is string && data.category.size() <= 100
+        && data.amount is number;
+    }
+
+    // --- RULES FOR COLLECTIONS ---
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow create: if isSignedIn() && isValidId(businessId) && isValidBusiness(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && isOwner(existing().ownerUid);
+      allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidBusiness(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
+      allow delete: if isSignedIn() && isOwner(existing().ownerUid);
+    }
+
+    // Customers collection
+    match /customers/{customerId} {
+      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && isOwner(existing().ownerUid);
+      allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidCustomer(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
+      allow delete: if isSignedIn() && isOwner(existing().ownerUid);
+    }
+
+    // Invoices collection
+    match /invoices/{invoiceId} {
+      allow create: if isSignedIn() && isValidId(invoiceId) && isValidInvoice(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && isOwner(existing().ownerUid);
+      allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidInvoice(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
+      allow delete: if isSignedIn() && isOwner(existing().ownerUid);
+    }
+
+    // Products collection
+    match /products/{productId} {
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && isOwner(existing().ownerUid);
+      allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidProduct(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
+      allow delete: if isSignedIn() && isOwner(existing().ownerUid);
+    }
+
+    // Expenses collection
+    match /expenses/{expenseId} {
+      allow create: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && isOwner(existing().ownerUid);
+      allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidExpense(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
+      allow delete: if isSignedIn() && isOwner(existing().ownerUid);
+    }
+  }
+}

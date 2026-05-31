@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "Business": {
+      "title": "Business",
+      "description": "Represents an Indian business profile belonging to a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique business ID" },
+        "ownerUid": { "type": "string", "description": "UID of the user who owns this business" },
+        "name": { "type": "string", "description": "Name of the business (e.g. Acme corp or Gupta Traders)" },
+        "gstin": { "type": "string", "description": "15-character GST identification number (optional)" },
+        "address": { "type": "string", "description": "Full business address" },
+        "stateCode": { "type": "string", "description": "2-digit state code prefix for GST" },
+        "email": { "type": "string", "description": "Business email address" },
+        "phone": { "type": "string", "description": "Business phone contact" },
+        "upiId": { "type": "string", "description": "UPI VPA for generating pay QR (e.g., business@okaxis)" },
+        "bankName": { "type": "string", "description": "Name of the bank" },
+        "bankAccountNumber": { "type": "string", "description": "Bank account number" },
+        "bankIfsc": { "type": "string", "description": "IFSC code of the bank branch" },
+        "logoUrl": { "type": "string", "description": "URL to business logo asset (optional)" },
+        "signatureUrl": { "type": "string", "description": "URL to authorized signature image (optional)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the business was created" }
+      },
+      "required": ["id", "ownerUid", "name", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Represents a client, vendor or party",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique customer ID" },
+        "businessId": { "type": "string", "description": "Underlying business this customer belongs to" },
+        "ownerUid": { "type": "string", "description": "Owner UID of the creator" },
+        "name": { "type": "string", "description": "Name of the customer or firm" },
+        "gstin": { "type": "string", "description": "Customer's GSTIN (optional)" },
+        "phone": { "type": "string", "description": "Customer's phone number" },
+        "email": { "type": "string", "description": "Customer's email address" },
+        "address": { "type": "string", "description": "Customer's shipping/billing address" },
+        "stateCode": { "type": "string", "description": "2-char state code of customer for GST calculations" },
+        "outstandingBalance": { "type": "number", "description": "Current balance due" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When this record was added" }
+      },
+      "required": ["id", "businessId", "ownerUid", "name", "createdAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Represents an invoice, quotation, receipt or delivery challan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique invoice ID" },
+        "invoiceNumber": { "type": "string", "description": "Sequential code representing this invoice" },
+        "businessId": { "type": "string", "description": "Origin business ID" },
+        "ownerUid": { "type": "string", "description": "UID of owner" },
+        "customerId": { "type": "string", "description": "Target customer ID" },
+        "type": { "type": "string", "enum": ["GST Invoice", "Proforma Invoice", "Quotation", "Receipt", "Delivery Challan", "Purchase Order", "Credit Note", "Debit Note"] },
+        "date": { "type": "string", "description": "Issue date" },
+        "dueDate": { "type": "string", "description": "Payment due date" },
+        "items": { "type": "array", "description": "List of billing items" },
+        "discount": { "type": "number", "description": "Discount in rupees" },
+        "shipping": { "type": "number", "description": "Shipping charges in rupees" },
+        "cgst": { "type": "number", "description": "Central GST total" },
+        "sgst": { "type": "number", "description": "State GST total" },
+        "igst": { "type": "number", "description": "Integrated GST total" },
+        "totalAmount": { "type": "number", "description": "Final payable amount in INR" },
+        "status": { "type": "string", "enum": ["Draft", "Unpaid", "Paid", "Partially Paid", "Overdue"] },
+        "paidAmount": { "type": "number", "description": "Amount collected far" },
+        "notes": { "type": "string", "description": "Notes for customer" },
+        "terms": { "type": "string", "description": "Legal/payment terms" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Record timestamp" }
+      },
+      "required": ["id", "invoiceNumber", "businessId", "ownerUid", "customerId", "type", "date", "totalAmount", "status", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Represents inventory products or services",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique product ID" },
+        "businessId": { "type": "string", "description": "Business it belongs to" },
+        "ownerUid": { "type": "string", "description": "Owner UID" },
+        "name": { "type": "string", "description": "Product or service name" },
+        "description": { "type": "string", "description": "Description info" },
+        "hsnSac": { "type": "string", "description": "Indian HSN/SAC code for GST classification" },
+        "unitPrice": { "type": "number", "description": "Price per unit" },
+        "gstRate": { "type": "number", "description": "Default GST rate percentage (e.g. 18)" },
+        "stock": { "type": "number", "description": "Inventory stock quantity (optional)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When created" }
+      },
+      "required": ["id", "businessId", "ownerUid", "name", "unitPrice", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Represents small business cashflow expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique expense ID" },
+        "businessId": { "type": "string", "description": "Business ID" },
+        "ownerUid": { "type": "string", "description": "Owner UID" },
+        "date": { "type": "string", "description": "Expense date" },
+        "description": { "type": "string", "description": "Expense description" },
+        "category": { "type": "string", "description": "Category (e.g., Rent, Salaries, Office Supplies, Tech)" },
+        "amount": { "type": "number", "description": "Expense amount in INR" },
+        "gstPaid": { "type": "number", "description": "GST tax component paid (optional)" },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Bank Transfer", "Credit Card", "Cheque"] },
+        "billUrl": { "type": "string", "description": "Bill scan image or PDF URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "businessId", "ownerUid", "date", "description", "category", "amount", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "Business",
+      "description": "Stores business profile data of subscribers"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Stores client records for invoices and outstanding bills"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Stores invoices, quotations, and commercial transactions"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Stores products and services offered by the businesses"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Stores bills, expenses, and payments made"
+    }
+  }
+}
