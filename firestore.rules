@@ -35,6 +35,7 @@ service cloud.firestore {
         && data.id is string && data.id.size() <= 128
         && data.ownerUid == request.auth.uid
         && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.createdAt is string && data.createdAt.size() <= 50
         && (data.get('gstin', null) == null || (data.gstin is string && data.gstin.size() <= 15))
         && (data.get('email', null) == null || (data.email is string && data.email.size() <= 100))
         && (data.get('phone', null) == null || (data.phone is string && data.phone.size() <= 20))
@@ -47,6 +48,7 @@ service cloud.firestore {
         && data.businessId is string && data.businessId.size() <= 128
         && data.ownerUid == request.auth.uid
         && data.name is string && data.name.size() > 0 && data.name.size() <= 250
+        && data.createdAt is string && data.createdAt.size() <= 50
         && (data.get('gstin', null) == null || (data.gstin is string && data.gstin.size() <= 15))
         && (data.get('phone', null) == null || (data.phone is string && data.phone.size() <= 25))
         && (data.get('email', null) == null || (data.email is string && data.email.size() <= 100));
@@ -63,6 +65,7 @@ service cloud.firestore {
         && data.date is string && data.date.size() <= 50
         && data.totalAmount is number
         && data.status is string && (data.status == 'Draft' || data.status == 'Unpaid' || data.status == 'Paid' || data.status == 'Partially Paid' || data.status == 'Overdue')
+        && data.createdAt is string && data.createdAt.size() <= 50
         && (data.get('items', null) == null || data.items is list);
     }
 
@@ -72,7 +75,8 @@ service cloud.firestore {
         && data.businessId is string && data.businessId.size() <= 128
         && data.ownerUid == request.auth.uid
         && data.name is string && data.name.size() > 0 && data.name.size() <= 250
-        && data.unitPrice is number;
+        && data.unitPrice is number
+        && data.createdAt is string && data.createdAt.size() <= 50;
     }
 
     function isValidExpense(data) {
@@ -83,14 +87,15 @@ service cloud.firestore {
         && data.date is string && data.date.size() <= 50
         && data.description is string && data.description.size() <= 500
         && data.category is string && data.category.size() <= 100
-        && data.amount is number;
+        && data.amount is number
+        && data.createdAt is string && data.createdAt.size() <= 50;
     }
 
     // --- RULES FOR COLLECTIONS ---
 
     // Businesses collection
     match /businesses/{businessId} {
-      allow create: if isSignedIn() && isValidId(businessId) && isValidBusiness(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(businessId) && isValidBusiness(incoming());
       allow read: if isSignedIn() && isOwner(existing().ownerUid);
       allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidBusiness(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
       allow delete: if isSignedIn() && isOwner(existing().ownerUid);
@@ -98,7 +103,7 @@ service cloud.firestore {
 
     // Customers collection
     match /customers/{customerId} {
-      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(incoming());
       allow read: if isSignedIn() && isOwner(existing().ownerUid);
       allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidCustomer(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
       allow delete: if isSignedIn() && isOwner(existing().ownerUid);
@@ -106,7 +111,7 @@ service cloud.firestore {
 
     // Invoices collection
     match /invoices/{invoiceId} {
-      allow create: if isSignedIn() && isValidId(invoiceId) && isValidInvoice(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(invoiceId) && isValidInvoice(incoming());
       allow read: if isSignedIn() && isOwner(existing().ownerUid);
       allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidInvoice(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
       allow delete: if isSignedIn() && isOwner(existing().ownerUid);
@@ -114,7 +119,7 @@ service cloud.firestore {
 
     // Products collection
     match /products/{productId} {
-      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(incoming());
       allow read: if isSignedIn() && isOwner(existing().ownerUid);
       allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidProduct(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
       allow delete: if isSignedIn() && isOwner(existing().ownerUid);
@@ -122,7 +127,7 @@ service cloud.firestore {
 
     // Expenses collection
     match /expenses/{expenseId} {
-      allow create: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming()) && incoming().createdAt == request.time;
+      allow create: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming());
       allow read: if isSignedIn() && isOwner(existing().ownerUid);
       allow update: if isSignedIn() && isOwner(existing().ownerUid) && isValidExpense(incoming()) && incoming().createdAt == existing().createdAt && incoming().ownerUid == existing().ownerUid;
       allow delete: if isSignedIn() && isOwner(existing().ownerUid);
