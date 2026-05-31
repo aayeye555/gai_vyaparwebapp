@@ -50,8 +50,6 @@ import {
 import {
   auth,
   loginWithGoogle,
-  loginWithEmail,
-  registerWithEmail,
   logoutUser,
   fetchUserBusinesses,
   saveBusiness,
@@ -179,13 +177,6 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Modal / Form States
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authTab, setAuthTab] = useState<"login" | "register" | "demo">("login");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authSubmitting, setAuthSubmitting] = useState(false);
-
   const [showBusinessForm, setShowBusinessForm] = useState(false);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
@@ -365,13 +356,14 @@ export default function App() {
     setCreatorItems(creatorItems.filter((_, i) => i !== index));
   };
 
-  // Open Authentication Dialog
-  const handleLogin = () => {
-    setAuthError("");
-    setAuthEmail("");
-    setAuthPassword("");
-    setAuthTab("login");
-    setShowAuthModal(true);
+  // Google Login helper
+  const handleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error(err);
+      alert("Sign In failed: " + (err.message || err));
+    }
   };
 
   // Handle invoice saving & GST computation rules
@@ -3444,287 +3436,7 @@ Thank you! From ${activeBusiness.name}.`;
         </main>
       </div>
 
-      {/* 8. UNIFIED SECURE AUTHENTICATION CONSOLE MODAL */}
-      <AnimatePresence>
-        {showAuthModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden text-slate-800"
-            >
-              {/* Modal Header */}
-              <div className="bg-indigo-600 text-white p-5 relative">
-                <button
-                  onClick={() => setShowAuthModal(false)}
-                  className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-indigo-700/50 transition-colors text-white/80 hover:text-white"
-                >
-                  <X size={18} />
-                </button>
-                <div className="flex items-center gap-2 mb-1">
-                  <Lock size={18} className="text-amber-300" />
-                  <h3 className="text-base font-black uppercase tracking-wide">Unified Secure Sign-In</h3>
-                </div>
-                <p className="text-[11px] text-indigo-100">
-                  Manage GSTR-1 ledgers, catalog invoicing, and payment logs securely.
-                </p>
-              </div>
 
-              {/* Warning/Info Box about Sandbox Iframe popup issues */}
-              <div className="bg-amber-50 border-b border-amber-100 p-4 text-[11px] text-amber-800 flex gap-2">
-                <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-bold">Sandbox Environment Advisory</p>
-                  <p>
-                    Standard Google Sign-In popups might be blocked due to browser iframe constraints in the AI Studio preview.
-                  </p>
-                  <p className="font-semibold text-amber-905">
-                    If Google login fails, please use Email/Password sign-in or the simulated Sandbox Bypass below!
-                  </p>
-                </div>
-              </div>
-
-              {/* Tab Selector */}
-              <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold">
-                <button
-                  onClick={() => { setAuthTab("login"); setAuthError(""); }}
-                  className={`flex-1 py-3 text-center border-b-2 transition-colors ${
-                    authTab === "login" ? "border-indigo-600 text-indigo-600 bg-white font-bold" : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Login (Email)
-                </button>
-                <button
-                  onClick={() => { setAuthTab("register"); setAuthError(""); }}
-                  className={`flex-1 py-3 text-center border-b-2 transition-colors ${
-                    authTab === "register" ? "border-indigo-600 text-indigo-600 bg-white font-bold" : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Register
-                </button>
-                <button
-                  onClick={() => { setAuthTab("demo"); setAuthError(""); }}
-                  className={`flex-1 py-3 text-center border-b-2 transition-colors ${
-                    authTab === "demo" ? "border-indigo-600 text-indigo-600 bg-white font-bold" : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Sandbox Bypass
-                </button>
-              </div>
-
-              {/* Tab Contents */}
-              <div className="p-5 space-y-4">
-                {authError && (
-                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl text-xs text-rose-600 flex items-start gap-1.5">
-                    <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-                    <span>{authError}</span>
-                  </div>
-                )}
-
-                {/* EMAIL LOGIN TAB */}
-                {authTab === "login" && (
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!authEmail || !authPassword) {
-                        setAuthError("Please fill in both email and password.");
-                        return;
-                      }
-                      setAuthSubmitting(true);
-                      setAuthError("");
-                      try {
-                        await loginWithEmail(authEmail, authPassword);
-                        setShowAuthModal(false);
-                      } catch (err: any) {
-                        setAuthError(err.message || "Failed to sign in. Please verify credentials.");
-                      } finally {
-                        setAuthSubmitting(false);
-                      }
-                    }}
-                    className="space-y-3.5"
-                  >
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Email Address</label>
-                      <div className="relative">
-                        <Mail size={14} className="absolute left-3 top-3.5 text-slate-400" />
-                        <input
-                          type="email"
-                          required
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          placeholder="admin@mybusiness.com"
-                          className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:border-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Password</label>
-                      <div className="relative">
-                        <Lock size={14} className="absolute left-3 top-3.5 text-slate-400" />
-                        <input
-                          type="password"
-                          required
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:border-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={authSubmitting}
-                      className="w-full bg-indigo-600 hover:bg-indigo-750 disabled:bg-slate-300 text-white font-bold text-xs py-2.5 rounded-xl transition-colors shadow-xs uppercase font-mono tracking-wider flex items-center justify-center gap-1.5"
-                    >
-                      {authSubmitting ? "Authenticating..." : "Sign In & Connect Cloud Server"}
-                    </button>
-
-                    <div className="flex justify-between items-center pt-2 text-[11px] text-slate-500">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setAuthSubmitting(true);
-                          setAuthError("");
-                          try {
-                            await loginWithGoogle();
-                            setShowAuthModal(false);
-                          } catch (err: any) {
-                            setAuthError(err.message || "Google Login failed inside the iframe browser constraint.");
-                          } finally {
-                            setAuthSubmitting(false);
-                          }
-                        }}
-                        className="text-indigo-600 hover:underline font-bold"
-                      >
-                        Try Google Login anyway
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAuthTab("register")}
-                        className="hover:underline"
-                      >
-                        Need an account? Register
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* EMAIL INTEGRITY REGISTRATION REGISTER TAB */}
-                {authTab === "register" && (
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!authEmail || !authPassword) {
-                        setAuthError("Please fill in both email and password.");
-                        return;
-                      }
-                      if (authPassword.length < 6) {
-                        setAuthError("Password must be at least 6 characters.");
-                        return;
-                      }
-                      setAuthSubmitting(true);
-                      setAuthError("");
-                      try {
-                        await registerWithEmail(authEmail, authPassword);
-                        setShowAuthModal(false);
-                      } catch (err: any) {
-                        setAuthError(err.message || "Registration failed. Email might already be in use.");
-                      } finally {
-                        setAuthSubmitting(false);
-                      }
-                    }}
-                    className="space-y-3.5"
-                  >
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Email Address</label>
-                      <div className="relative">
-                        <Mail size={14} className="absolute left-3 top-3.5 text-slate-400" />
-                        <input
-                          type="email"
-                          required
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          placeholder="register@mybusiness.com"
-                          className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:border-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Desired Security Password</label>
-                      <div className="relative">
-                        <Lock size={14} className="absolute left-3 top-3.5 text-slate-400" />
-                        <input
-                          type="password"
-                          required
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          placeholder="At least 6 characters"
-                          className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:border-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={authSubmitting}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold text-xs py-2.5 rounded-xl transition-colors shadow-xs uppercase font-mono tracking-wider font-semibold"
-                    >
-                      {authSubmitting ? "Registering account..." : "Create Free Account & Provision Space"}
-                    </button>
-
-                    <div className="pt-2 text-center text-[11px] text-slate-500">
-                      <button
-                        type="button"
-                        onClick={() => setAuthTab("login")}
-                        className="text-indigo-650 hover:underline font-bold"
-                      >
-                        Already have an account? Sign In
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* SANDBOX DEVELOPER BYPASS TAB */}
-                {authTab === "demo" && (
-                  <div className="space-y-4 py-1">
-                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-150 text-xs text-slate-600 space-y-2">
-                      <p className="font-bold text-slate-800">Why use Sandbox Bypass?</p>
-                      <ul className="list-disc pl-4 space-y-1 text-[11px]">
-                        <li>Avoid firewall/cookie restriction blocks inside iframes completely</li>
-                        <li>Simulation runs instant high-contrast administrative views locally</li>
-                        <li>No emails or passwords are sent over the network</li>
-                      </ul>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Set simulated user
-                        setUser({
-                          uid: "demo_admin_uid_99",
-                          email: "sandbox-admin@vyaparflow.in",
-                          displayName: "Sandbox Administrator",
-                          photoURL: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80"
-                        });
-                        setIsAdmin(true);   // Grant full simulator admin dashboard too!
-                        setShowAuthModal(false);
-                      }}
-                      className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-2.5 rounded-xl transition-colors shadow-xs uppercase tracking-wider font-mono flex items-center justify-center gap-1.5"
-                    >
-                      <Sparkles size={14} className="text-amber-400" />
-                      Login as Sandbox User (Bypass Mode)
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </div>
   );
